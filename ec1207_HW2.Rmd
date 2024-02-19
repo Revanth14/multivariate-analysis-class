@@ -1,0 +1,18 @@
+---
+title: "ec1207_HW2"
+author: "Revanth"
+date: "2024-02-18"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+
+
+```
+```
+
