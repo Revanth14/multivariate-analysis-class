@@ -1,0 +1,223 @@
+---
+title: "assignment-3"
+author: "Revanth"
+date: "2024-02-24"
+output: html_document
+---
+
+```{r}
+#Sepal Length Analysis
+# Q. What is the average sepal length of all iris flowers in the dataset?
+sepal_length_mean <- mean(iris$Sepal.Length)
+print(paste("Sepal Length Mean:", sepal_length_mean))
+
+# The analysis gives the average sepal length of all the flowers in the iris dataset
+# The average length of sepals across all iris flowers in the dataset is approximately 5.84 cm.
+
+```
+
+```{r}
+#Sepal Length Variance
+# Q.How much does the sepal length vary across all iris flowers?
+sepal_length_var <- var(iris$Sepal.Length)
+print(paste("Variance Sepal Length:", sepal_length_var))
+
+# This analysis gives the variance in sepal length across all iris flowers in the dataset, indicating how spread out the sepal lengths are from the mean.
+# The variance in sepal length across all iris flowers in the dataset is approximately 0.69 cm^2, indicating how spread out the sepal lengths are from the mean.
+
+```
+```{r}
+# Sepal Width Analysis
+
+sepal_width_mean <- mean(iris$Sepal.Width)
+print(paste("Sepal Width Mean:", sepal_width_mean))
+
+#This analysis gives the average sepal width of all the flowers in the iris dataset.
+# The average width of sepals across all iris flowers in the dataset is approximately 3.06 cm.
+
+```
+```{r}
+# Sepal Width Variance
+# Q.How much does the sepal width vary across all iris flowers?
+
+sepal_width_var <- var(iris$Sepal.Width)
+print(paste("Variance Sepal Width:", sepal_width_var))
+#This analysis gives the variance in sepal width across all iris flowers in the dataset, indicating how spread out the sepal widths are from the mean.
+#The variance in sepal width across all iris flowers in the dataset is approximately 0.19 cm^2, indicating how spread out the sepal widths are from the mean.
+
+```
+```{r}
+# Species Analysis
+
+species_mean <- table(iris$Species)
+print(paste("Species Mean:", species_mean))
+# This gives the count of each species of flowers in the iris dataset
+# For each species of iris flowers in the dataset (setosa, versicolor, virginica), the average sepal length is provided. This helps in understanding the average size of sepals for each species.
+
+```
+```{r}
+# Species Analysis
+
+species_mean <- table(iris$Species)
+print(paste("Species Mean:", species_mean))
+# This gives the count of each species of flowers in the iris dataset
+# For each species of iris flowers in the dataset (setosa, versicolor, virginica), the average sepal length is provided. This helps in understanding the average size of sepals for each species.
+
+```
+```{r}
+# Q.How do the sepal length and sepal width correlate with each other?
+
+cor(iris$Sepal.Length, iris$Sepal.Width)
+
+# There is a negative correlation between sepal length and sepal width, indicating that as sepal length increases, sepal width also tends to increase.
+
+```
+```{r}
+# Is there a difference in the average petal length between different species of iris flowers?
+
+aggregate(Petal.Length ~ Species, data = iris, mean)
+
+# Yes, there is a difference in the average petal length between species. For example, the average petal length of setosa species is different from that of versicolor and virginica species.
+
+```
+```{r}
+# Are there any outliers in the sepal length or petal width measurements?
+boxplot(iris$Sepal.Length)
+boxplot(iris$Petal.Width)
+
+# No
+```
+```{r}
+#Multivariate Mean Analysis
+
+# Sepal Length vs. Sepal Width Analysis
+
+sepal_mean <- colMeans(iris[, c("Sepal.Length", "Sepal.Width")])
+print(paste("Sepal Length Mean:", sepal_mean[1], "Sepal Width Mean:", sepal_mean[2]))
+
+# This analysis gives the average sepal length and sepal width of all the flowers in the iris dataset, providing insights into the average size of the sepals.
+# The average sepal length and sepal width across all iris flowers in the dataset are approximately 5.84 cm and 3.06 cm respectively, providing insights into the average size of the sepals.
+
+```
+```{r}
+#Sepal Width and Petal Width Mean
+
+width_mean <- colMeans(iris[, c("Sepal.Width", "Petal.Width")])
+print(paste("Mean Sepal Width:", width_mean[1], "Mean Petal Width:", width_mean[2]))
+
+#This analysis gives the average sepal width and petal width across all iris flowers in the dataset, providing insights into the average width of the sepals and petals.
+# The average sepal width and petal width across all iris flowers in the dataset are approximately 3.06 cm and 1.20 cm respectively, providing insights into the average width of the sepals and petals.
+
+```
+```{r}
+# Species Mean
+
+species_mean <- aggregate(. ~ Species, data = iris, mean)
+print(species_mean)
+
+#This analysis gives the average measurements of sepal length, sepal width, petal length, and petal width for each species of iris flowers in the dataset, providing insights into the average size of each part of the flower for each species.
+# For each species of iris flowers in the dataset (setosa, versicolor, virginica), the average measurements of sepal length, sepal width, petal length, and petal width are provided. This helps in understanding the average size of each part of the flower for each species.
+
+```
+```{r}
+# multivariate variance analysis
+
+# Compute the variance-covariance matrix
+cov_matrix <- cov(iris[, c("Sepal.Length", "Sepal.Width", "Petal.Length", "Petal.Width")])
+print(cov_matrix)
+
+# The variance-covariance matrix shows the variances of each variable on the diagonal and the covariances between variables off the diagonal. It provides insights into how the variables vary individually and how they relate to each other
+
+```
+```{r}
+# Compute the correlation matrix
+cor_matrix <- cor(iris[, c("Sepal.Length", "Sepal.Width", "Petal.Length", "Petal.Width")])
+print(cor_matrix)
+
+# The correlation matrix shows the correlations between variables. It provides a standardized measure of the strength and direction of the linear relationship between pairs of variables.
+
+```
+```{r}
+# Sepal length distribution
+library(ggplot2)
+ggplot(iris, aes(x = Sepal.Length)) +
+  geom_histogram(fill = "skyblue", color = "black", bins = 20) +
+  labs(title = "Distribution of Sepal Length", x = "Sepal Length", y = "Frequency")
+# This gives the distribution os sepal length
+```
+```{r}
+# Sepal Length vs. Sepal Width
+ggplot(iris, aes(x = Sepal.Length, y = Sepal.Width, color = Species)) +
+  geom_point() +
+  labs(title = "Sepal Length vs. Sepal Width", x = "Sepal Length", y = "Sepal Width")
+# scatterplot of the sepal length vs sepal width
+```
+```{r}
+# Boxplot of Sepal Length by Species
+ggplot(iris, aes(x = Species, y = Sepal.Length, fill = Species)) +
+  geom_boxplot() +
+  labs(title = "Boxplot of Sepal Length by Species", x = "Species", y = "Sepal Length")
+
+```
+```{r}
+# Q.Is there a significant difference in the average petal length between the different species of iris flowers? Perform an ANOVA to test this.
+# Perform ANOVA
+anova_result <- aov(Petal.Length ~ Species, data = iris)
+print(summary(anova_result))
+
+#Analysis of variance (ANOVA) to test if there is a significant difference in the average petal length between the different species of iris flowers.
+
+```
+```{r}
+# Q.Is there a significant difference in the mean sepal width between the setosa and virginica species?
+
+t_test_result <- t.test(iris$Sepal.Width[iris$Species == "setosa"], iris$Sepal.Width[iris$Species == "virginica"])
+print(t_test_result)
+
+#Yes, the t-test results show a significant difference in the mean sepal width between the setosa and virginica species (p < 0.05).
+
+```
+```{r}
+# Q.Are the variances of sepal widths significantly different between the setosa and virginica species?
+f_test_result <- var.test(iris$Sepal.Width[iris$Species == "setosa"], iris$Sepal.Width[iris$Species == "virginica"])
+print(f_test_result)
+# No, the F-test results show no significant difference in the variance of sepal widths between the setosa and virginica species (p > 0.05).
+
+```
+```{r}
+# Performing ANOVA for sepal length among species
+anova_result <- aov(Sepal.Length ~ Species, data = iris)
+print(summary(anova_result))
+
+# A low p-value (typically < 0.05) suggests that there are significant differences in sepal length among the species.
+
+```
+```{r}
+# Performing MANOVA for sepal length and sepal width among species
+manova_result <- manova(cbind(Sepal.Length, Sepal.Width) ~ Species, data = iris)
+print(summary(manova_result))
+
+# p-value indicate whether there are significant differences in the combined dependent variables (sepal length and sepal width) among the species. A low p-value suggests significant differences.
+
+
+```
+```{r}
+
+```
+```{r}
+
+```
+```{r}
+
+```
+
+
+
+
+
+
+
+
+
+
+
