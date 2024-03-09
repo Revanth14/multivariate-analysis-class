@@ -1,0 +1,174 @@
+---
+title: "ec1207"
+author: "Revanth"
+date: "2024-02-29"
+output: html_document
+---
+```{r}
+
+
+library(readr)
+library(ggplot2)
+library(dplyr)
+library(tidyverse)
+library(grid)
+library(cowplot) 
+library(factoextra)
+library(corrplot)
+library(devtools)
+library(FactoMineR)
+library(ggfortify)
+library(psych)
+library(vctrs)
+library(purrr)
+library("corrplot")
+
+tita <- read_csv("c:/users/admin/desktop/tita.csv")
+str(tita)
+attach(tita)
+summary(tita)
+cor(tita[-1])
+
+plot(tita[,-1])
+
+library(GGally)
+ggpairs(tita[,c( "Survived","PassengerId", "Pclass", "Age","Fare")],aes(color = factor(Survived)))
+
+p1 <- ggplot(tita, aes(x=PassengerId, y=Pclass, color=Survived)) + geom_point()
+p2 <- ggplot(tita, aes(x=Age, y=Fare, color=Survived)) + geom_point()
+p3 <- ggplot(tita, aes(x=Age, y=PassengerId, color=Survived)) + geom_point()
+p4 <- ggplot(tita, aes(x=Pclass, y=Fare, color=Survived)) + geom_point()
+plot_grid(p1, p2, p3, p4, labels = "AUTO")
+
+
+
+
+
+tita_pca <- prcomp(tita[,-1],scale=TRUE)
+tita_pca
+summary(tita_pca)
+plot(tita_pca)
+tita_pca
+
+(eigen_tita <- tita_pca$sdev^2)
+names(eigen_tita) <- paste("PC",1:4,sep="")
+eigen_tita
+
+
+sumlabdas<-sum(eigen_tita)
+sumlabdas
+
+propvar<-eigen_tita/sumlabdas
+propvar
+
+cumvar<-cumsum(propvar)
+cumvar
+
+
+matlambdas <- rbind(eigen_tita,propvar,cumvar)
+rownames(matlambdas) <- c("Eigenvalues","Prop. variance","Cum. prop. variance")
+round(matlambdas,4)
+
+summary(tita_pca)
+tita_pca$rotation
+
+tita_pca$x
+
+var <- get_pca_var(tita_pca)
+var
+
+
+plot(eigen_tita, xlab = "Component number", ylab = "Component variance", type = "l", main = "Scree diagram")
+
+library(psych)
+
+
+
+pairs.panels(tita[-1],
+             gap = 0,
+             bg = c("red", "blue")[tita$Survived],
+             pch=21)
+
+diag(cov(tita_pca$x))
+xlim <- range(tita_pca$x[,1])
+plot(tita_pca$x,xlim=xlim,ylim=xlim)
+
+
+
+#Correlation circle
+head(var$coord, 4)
+fviz_eig(tita_pca, addlabels = TRUE)
+
+fviz_pca_var(tita_pca,col.var = "cos2",
+             gradient.cols = c("#FFCC00", "#CC9933", "#660033", "#330033"),
+             repel = TRUE)
+
+
+biplot(tita_pca)
+
+
+head(var$cos2, 4)
+corrplot(var$cos2, is.corr=FALSE)
+
+fviz_pca_var(tita_pca, col.var = "cos2",
+             gradient.cols = c("#00FF00", "#FF0000", "#FC4E07"), 
+             repel = TRUE 
+)
+
+#Contributions of  Pc
+head(var$contrib, 4)
+
+corrplot(var$contrib, is.corr=FALSE)   
+fviz_pca_var(tita_pca, col.var = "contrib",
+             gradient.cols = c("#00FF00", "#E7B800", "#FC4E07")
+)
+# Contributions of  PC1
+fviz_contrib(tita_pca, choice = "var", axes = 1, top = 10)
+# Contributions of  PC2
+fviz_contrib(tita_pca, choice = "var", axes = 2, top = 10)
+fviz_contrib(tita_pca, choice = "var", axes = 1:2, top = 10)
+
+
+#Graphs of ind
+
+ind <- get_pca_ind(tita_pca)
+ind
+
+# Coordinates of individuals
+head(ind$coord)
+# Quality of individuals
+head(ind$cos2)
+# Contributions of individuals
+head(ind$contrib)
+
+
+fviz_pca_ind(tita_pca, col.ind = "cos2", 
+             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
+             repel = TRUE # Avoid text overlapping (slow if many points)
+)
+
+library(factoextra)
+
+
+fviz_pca_ind(tita_pca,
+             geom.ind = "point",
+             col.ind = tita$Survived, # color by groups
+             palette = c("#00FF00", "#E7B800", "#FC4E07"),
+             addEllipses = TRUE, # ellipses
+             legend.title = "Survivorship"
+)
+ind.p <- fviz_pca_ind(tita_pca, geom = "point", col.ind = tita$Survived)
+ggpubr::ggpar(ind.p,
+              title = "Principal Component Analysis",
+              subtitle = "titanic",
+              xlab = "PC1", ylab = "PC2",
+              legend.title = "Survivorship", legend.position = "top",
+              ggtheme = theme_gray(), palette = "jco"
+)
+
+
+#anova testing
+tita_anova <- aov(PassengerId+Pclass ~ Survived, data = tita)
+summary(tita_anova)
+
+```
