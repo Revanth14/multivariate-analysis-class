@@ -1,0 +1,246 @@
+---
+title: "ec1207"
+author: "Revanth"
+date: "2024-03-08"
+output: html_document
+---
+```{r}
+library(cluster)
+library(readr)
+library(factoextra)
+library(magrittr)
+library(NbClust)
+```
+
+## College Dataset
+
+```{r}
+clg11 <- read_csv("c:/users/admin/desktop/MVA/College_Data.csv")
+clg21 <- data.frame(clg11, row.names = 1)
+
+matstd.clg21 <- scale(clg21)
+
+# Creating a (Euclidean) distance matrix of the standardized data 
+dist.clg21 <- dist(matstd.clg21, method="euclidean")
+
+# Invoking hclust command (cluster analysis by single linkage method)      
+clusclg21.nn <- hclust(dist.clg21, method = "single") 
+
+# Plotting vertical dendrogram      
+# create extra margin room in the dendrogram, on the bottom (Canine species' labels)
+#par(mar=c(6, 4, 4, 2) + 0.1)
+plot(as.dendrogram(clusclg21.nn),ylab="Distance between Colleges",ylim=c(0,2.5),main="Dendrogram of all Colleges")
+```
+
+* The plot looks very messy as there are 700+ colleges in the dataset. 
+* For better analysis, only 30 colleges have been selected for further analysis.
+
+## Analysis on 30 selected colleges
+
+```{r}
+clg1 <- read_csv("c:/users/admin/desktop/MVA/College_Data_Cleaned.csv")
+clg <- data.frame(clg1, row.names = 1)
+attach(clg)
+str(clg)
+
+matstd.clg <- scale(clg)
+
+# Creating a (Euclidean) distance matrix of the standardized data 
+dist.clg <- dist(matstd.clg, method="euclidean")
+
+# Invoking hclust command (cluster analysis by single linkage method)      
+clusclg.nn <- hclust(dist.clg, method = "single") 
+
+# Plotting vertical dendrogram      
+# create extra margin room in the dendrogram, on the bottom (Canine species' labels)
+#par(mar=c(6, 4, 4, 2) + 0.1)
+plot(as.dendrogram(clusclg.nn),ylab="Distance between Colleges",ylim=c(0,5.5),main="Dendrogram of 30 selected Colleges")
+```
+
+### Horizontal Dendogram
+
+```{r}
+plot(as.dendrogram(clusclg.nn), xlab= "Distance between Colleges", xlim=c(5.5,0),
+     horiz = TRUE,main="Dendrogram of 30 selected Colleges")
+```
+
+### Using Agnes Function
+
+```{r}
+# Agnes function allows us to select option for data standardization, the distance measure and clustering algorithm in one single function
+
+(agn.clg <- agnes(clg, metric="euclidean", stand=TRUE, method = "single"))
+
+#  Description of cluster merging
+agn.clg$merge
+
+plot(as.dendrogram(agn.clg), xlab= "Distance between Colleges",xlim=c(8,0),
+     horiz = TRUE,main="Dendrogram")
+```
+
+* The Agnes function
+
+### Interactive Plots
+
+```{r}
+plot(agn.clg, which.plots=1)
+
+plot(agn.clg, which.plots=2)
+```
+
+## K-Means Clustering
+
+### 2 clusters
+
+```{r}
+matstd.clg <- scale(clg)
+# K-means, k=2, 3, 4, 5, 6
+# Centers (k's) are numbers thus, 10 random sets are chosen
+
+(kmeans2.clg <- kmeans(matstd.clg,2,nstart = 10))
+```
+
+```{r}
+# Computing the percentage of variation accounted for. Two clusters
+perc.var.2 <- round(100*(1 - kmeans2.clg$betweenss/kmeans2.clg$totss),1)
+names(perc.var.2) <- "Perc. 2 clus"
+perc.var.2
+```
+
+### 3 clusters
+
+```{r}
+# Computing the percentage of variation accounted for. Three clusters
+(kmeans3.clg <- kmeans(matstd.clg,3,nstart = 10))
+```
+
+```{r}
+perc.var.3 <- round(100*(1 - kmeans3.clg$betweenss/kmeans3.clg$totss),1)
+names(perc.var.3) <- "Perc. 3 clus"
+perc.var.3
+```
+
+### 4 clusters
+
+```{r}
+# Computing the percentage of variation accounted for. Four clusters
+(kmeans4.clg <- kmeans(matstd.clg,4,nstart = 10))
+```
+
+```{r}
+perc.var.4 <- round(100*(1 - kmeans4.clg$betweenss/kmeans4.clg$totss),1)
+names(perc.var.4) <- "Perc. 4 clus"
+perc.var.4
+```
+
+### 5 clusters
+
+```{r}
+# Computing the percentage of variation accounted for. Five clusters
+(kmeans5.clg <- kmeans(matstd.clg,5,nstart = 10))
+```
+
+```{r}
+perc.var.5 <- round(100*(1 - kmeans5.clg$betweenss/kmeans5.clg$totss),1)
+names(perc.var.5) <- "Perc. 5 clus"
+perc.var.5
+```
+
+### 6 clusters
+
+```{r}
+# Computing the percentage of variation accounted for. Six clusters
+(kmeans6.clg <- kmeans(matstd.clg,6,nstart = 10))
+```
+
+```{r}
+perc.var.6 <- round(100*(1 - kmeans6.clg$betweenss/kmeans6.clg$totss),1)
+names(perc.var.6) <- "Perc. 6 clus"
+perc.var.6
+```
+
+## Variance List and plot
+
+```{r}
+Variance_List <- c(perc.var.2,perc.var.3,perc.var.4,perc.var.5,perc.var.6)
+
+Variance_List
+
+plot(Variance_List)
+```
+
+```{r}
+# Saving four k-means clusters in a list
+clus1 <- matrix(names(kmeans4.clg$cluster[kmeans4.clg$cluster == 1]), 
+                ncol=1, nrow=length(kmeans4.clg$cluster[kmeans4.clg$cluster == 1]))
+colnames(clus1) <- "Cluster 1"
+clus2 <- matrix(names(kmeans4.clg$cluster[kmeans4.clg$cluster == 2]), 
+                ncol=1, nrow=length(kmeans4.clg$cluster[kmeans4.clg$cluster == 2]))
+colnames(clus2) <- "Cluster 2"
+clus3 <- matrix(names(kmeans4.clg$cluster[kmeans4.clg$cluster == 3]), 
+                ncol=1, nrow=length(kmeans4.clg$cluster[kmeans4.clg$cluster == 3]))
+colnames(clus3) <- "Cluster 3"
+clus4 <- matrix(names(kmeans4.clg$cluster[kmeans4.clg$cluster == 4]), 
+                ncol=1, nrow=length(kmeans4.clg$cluster[kmeans4.clg$cluster == 4]))
+colnames(clus4) <- "Cluster 4"
+list(clus1,clus2,clus3,clus4)
+```
+
+## VISUALISATIONS
+
+```{r}
+res.dist <- get_dist(clg, stand = TRUE, method = "pearson")
+
+# Understand the Distance Between States
+fviz_dist(res.dist, 
+          gradient = list(low = "#00AFBB", mid = "white", high = "#FC4E07"))
+```
+
+```{r}
+# Lets Try to Find the Optimal Distance
+fviz_nbclust(clg, kmeans, method = "gap_stat")
+```
+
+* It tells us that having three clusters is optimal.
+
+```{r}
+set.seed(123)
+km.res <- kmeans(clg, 3, nstart = 25)
+# Visualize
+fviz_cluster(km.res, data = clg,
+             ellipse.type = "convex",
+             palette = "jco",
+             ggtheme = theme_minimal())
+```
+
+### For Outliers, we use the following:
+
+```{r}
+pam.res <- pam(clg, 3)
+# Visualize
+fviz_cluster(pam.res)
+```
+
+## Hierarchial Clusiering
+
+```{r}
+res.hc <- clg %>% scale() %>% dist(method = "euclidean") %>%
+  hclust(method = "ward.D2")
+
+fviz_dend(res.hc, k = 4, # Cut in four groups
+          cex = 0.5, # label size
+          k_colors = c("#2E9FDF", "#00AFBB", "#E7B800", "#FC4E07"),
+          color_labels_by_k = TRUE, # color labels by groups
+          rect = TRUE # Add rectangle around groups
+          )
+```
+
+* We have used 4 clusters in this case.
+
+## Optimal Clusters
+
+```{r}
+# Lets see what the optimal numbers of clusers are
+# Compute
+res.nbclust <- clg %>% scale() %>% NbClust(distance = "euclidean", min.nc = 2, max.nc = 10, method = "complete", index ="all") 
+```
