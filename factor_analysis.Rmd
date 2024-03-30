@@ -1,0 +1,132 @@
+---
+title: "ec1207"
+author: "Revanth"
+date: "2024-03-24"
+output: html_document
+---
+
+```{r}
+library(psych)
+library(nFactors)
+library(datasets)
+library(readr)
+```
+
+```{r}
+# Load Iris dataset
+data(iris)
+```
+
+```{r}
+# Exploring dataset
+str(iris)
+summary(iris)
+```
+
+```{r}
+# Performing PCA to understand component analysis
+iris_pca <- prcomp(iris[, -5], scale. = TRUE)
+
+# Summary of the PCA
+summary(iris_pca)
+
+```
+
+```{r}
+# Biplot of the PCA
+biplot(iris_pca)
+```
+
+# Q1. Decide how many Factors are ideal for your dataset
+
+```{r}
+# Performing parallel analysis to decide the number of factors
+iris_numeric <- iris[, 1:4]
+iris_parallel <- fa.parallel(iris_numeric, fa = "both", n.iter = 1000, n.obs = nrow(iris_numeric))
+
+```
+
+```{r}
+# Plot parallel analysis results
+plot(iris_parallel)
+```
+
+```{r}
+# Perform factor analysis with 2 factors
+fit.fa <- fa(iris_numeric, nfactors = 2, rotate = "varimax")
+
+# Perform factor analysis with 3 factors
+fit.fa3 <- fa(iris_numeric, nfactors = 3, rotate = "varimax")
+```
+
+# Q2. Explain the output for your factor model
+
+```{r}
+# Explain the factor model
+summary(fit.fa)
+
+summary(fit.fa3)
+```
+
+## The output provides information about the factor analysis model:
+## The standardized loadings (pattern matrix) show the correlation between each variable and the extracted factors. Higher loadings indicate a stronger relationship.
+## The "SS loadings" row shows the sum of squared loadings for each factor.
+## The "Proportion Var" row shows the proportion of variance explained by each factor.
+## The "Cumulative Var" row shows the cumulative proportion of variance explained by the factors.
+## The chi-square statistic tests the hypothesis that the specified number of factors is sufficient to explain the correlations among the variables.
+
+# Q3. Show the columns that go into each factor 
+
+```{r}
+# Show the columns that go into each factor
+loadings(fit.fa)
+loadings(fit.fa3)
+```
+
+## From the pattern matrix in the output, we can see that:
+
+## Factor 1 is strongly associated with the "Sepal.Length" and "Sepal.Width" columns.
+## Factor 2 is strongly associated with the "Petal.Length" and "Petal.Width" columns.
+
+```{r}
+# Extract factor loadings
+factor_loadings <- fit.fa$loadings
+
+factor_loadings3 <- fit.fa3$loadings
+
+```
+
+# Q4. Perform some visualizations using the factors
+
+```{r}
+# Plot factor loadings
+plot(factor_loadings, type = "n", xlim = c(-1, 1), ylim = c(-1, 1), xlab = "Factor 1", ylab = "Factor 2")
+text(factor_loadings[, 1], factor_loadings[, 2], labels = rownames(factor_loadings), cex = 0.8)
+abline(h = 0, v = 0, col = "red", lty = 2)
+
+
+```
+
+
+
+```{r}
+# Create biplot
+biplot(fit.fa, choices = c(1, 2), labels = rownames(iris_numeric))
+```
+
+## This code extracts the factor scores from the factor analysis output and plots them on a scatterplot. The x-axis represents Factor 1 (associated with sepal dimensions), and the y-axis represents Factor 2 (associated with petal dimensions)
+
+```{r}
+# Component analysis
+fa.plot(fit.fa3)
+fa.diagram(fit.fa3)
+```
+```{r}
+vss(iris[,-5])
+```
+```{r}
+
+```
+```{r}
+
+```
