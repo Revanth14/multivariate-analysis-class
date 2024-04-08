@@ -1,0 +1,176 @@
+---
+title: "ec1207_social_media"
+author: "Revanth"
+date: "2024-03-28"
+output: html_document
+---
+
+
+```{r}
+library(readr)
+library(stats)
+```
+
+```{r}
+data_cleaned = read.csv('c:/users/admin/desktop/social.csv')
+data_numeric = data_cleaned[, -1]
+
+data_numeric
+```
+
+```{r}
+#Normalize the data (Scaling)
+data_scaled <- scale(data_numeric)
+```
+
+```{r}
+#PCA
+pca_result <- prcomp(data_scaled, scale. = TRUE)
+```
+
+```{r}
+#Summary of PCA
+summary(pca_result)
+```
+
+```{r}
+#Percentage of variance accounted for by each principal component
+prop_var <- pca_result$sdev^2 / sum(pca_result$sdev^2)
+prop_var
+```
+
+```{r}
+#Plot of the explained variance ratio
+plot(prop_var, type = 'b', xlab = "Principal Component", ylab = "Proportion of Variance Explained", main = "Scree Plot")
+
+```
+
+```{r}
+#Biplot
+biplot(pca_result)
+```
+
+```{r}
+peace <- which(data_cleaned$character == "peace")
+```
+
+```{r}
+#Plot PCA outcomes
+plot(pca_result$x[, 1], pca_result$x[, 2], xlab = "PC1", ylab = "PC2", main = "PCA Analysis")
+
+#Noting 'Peace' position using a color or symbol.
+points(pca_result$x[peace, 1], pca_result$x[peace, 2], col = "green", pch = 19)
+
+#Adding legend
+legend("topright", legend = c("Others", "peace"), col = c("blue", "green"), pch = c(1, 19), title = "Groups")
+
+```
+
+### Principal Component Analysis (PCA) revealed significant patterns and variations in social media usage among class members by simplifying the complex data while preserving important differences. The primary pattern accounted for 26.1% of the differences, followed by 19.1% for the second pattern, indicating diverse ways in which class members engage with social media platforms. PCA successfully identified major trends in the class's social media usage across various sites.
+
+### The plot highlighting ("peace") position reveals that the social media usage pattern is distinct from the majority of the class, indicating a unique way of interacting with social media compared to the peers.
+
+```{r}
+#CLUSTER
+
+#Number of clusters
+num_clusters <- 4
+```
+
+```{r}
+#Perform k-means clustering on the scores obtained from principal components.
+kmeans_clusters <- kmeans(pca_result$x[, 1:2], centers = num_clusters)
+```
+
+```{r}
+#Add cluster labels to the original dataset
+data_cleaned$cluster <- as.factor(kmeans_clusters$cluster)
+```
+
+```{r}
+#Plotting the PCA results with cluster membership
+plot(pca_result$x[, 1:2], col = data_cleaned$cluster, pch = 19, xlab = "PC1", ylab = "PC2", main = "Cluster Analysis PCA")
+
+#Add cluster centers into the visualization.
+points(kmeans_clusters$centers[, 1:2], col = 1:num_clusters, pch = 8, cex = 2)
+
+#Adding legend
+legend("topright", legend = unique(data_cleaned$cluster), col = 1:num_clusters, pch = 19, title = "Cluster")
+
+```
+
+```{r}
+peace_cluster <- kmeans_clusters$cluster[data_cleaned$character == "peace"]
+```
+
+```{r}
+#Plot PCA results with cluster membership
+plot(pca_result$x[, 1], pca_result$x[, 2], col = ifelse(data_cleaned$cluster == peace_cluster, "green", "red"), pch = 19, xlab = "PC1", ylab = "PC2", main = "Cluster Analysis")
+
+#Adding cluster centers
+points(kmeans_clusters$centers[, 1], kmeans_clusters$centers[, 2], col = 1:num_clusters, pch = 8, cex = 2)
+
+#Adding legend
+legend("topright", legend = c("Others", "peace"), col = c("red", "green"), pch = 19)
+
+#Adding legend for cluster centers
+legend("bottomright", legend = paste("Cluster", 1:num_clusters), col = 1:num_clusters, pch = 8, cex = 1, title = "Cluster Centers")
+
+```
+
+### The cluster analysis performed on the PCA scores divides the class into four distinct clusters based on their social media usage patterns. By examining the cluster membership and our position within the "peace" cluster, we can identify how our social media behavior aligns with or differs from other members within that cluster and the class as a whole. This analysis provides insights into the different subgroups within the class that share similar social media preferences and habits.
+
+
+```{r}
+#Performing Factor Analysis
+factor_result <- factanal(data_scaled, factors = 3)
+```
+
+```{r}
+#Displaying summary of Factor Analysis
+print(factor_result)
+
+```
+
+```{r}
+#Extracting factor loadings
+factor_loadings <- factor_result$loadings
+```
+
+```{r}
+#Plotting Factor Loadings
+barplot(abs(factor_loadings), beside = TRUE, col = "darkgreen", main = "Factor Loadings", xlab = "Variables", ylab = "Absolute Factor Loadings")
+legend("topright", legend = paste("Factor", 1:3), fill = "darkgreen")
+
+#Add cluster labels to the original dataset based on k-means clustering
+data_cleaned$cluster <- as.factor(kmeans_clusters$cluster)
+
+#Add factor scores to the original dataset
+data_cleaned$factor1 <- factor_result$scores[,1]
+data_cleaned$factor2 <- factor_result$scores[,2]
+data_cleaned$factor3 <- factor_result$scores[,3]
+
+#Plotting the PCA results with factor scores and cluster membership
+plot(pca_result$x[, 1:2], col = data_cleaned$cluster, pch = 19, xlab = "PC1", ylab = "PC2", main = "PCA - Factor Analysis and Cluster Analysis")
+points(factor_result$scores[, 1:2], col = "skyblue", pch = 4)
+legend("topright", legend = c("Cluster", "Factor"), col = c(1, "skyblue"), pch = c(19, 4), title = "Groups")
+
+#Adding legend for cluster
+legend("bottomright", legend = unique(data_cleaned$cluster), col = 1:num_clusters, pch = 19, title = "Cluster")
+
+```
+
+### The factor analysis with three factors suggests that there are three underlying dimensions or latent variables that explain the correlations among the social media variables. These factors could represent different aspects of social media engagement, such as content creation, social interaction, or platform preferences. By examining the factor loadings and individual factor scores, we can understand how our social media usage is influenced by these underlying factors and how you compare to the rest of the class in terms of these dimensions.
+
+# Question: Provide a takeaway from the analysis
+### The results from PCA, Cluster Analysis, and Factor Analysis collectively showcase the multifaceted nature of social media engagement within the class. Significant variations exist in how individuals utilize different platforms, which can be categorized into distinct behavioral patterns and associated with underlying factors. This analysis not only helps in understanding the prevalent trends in social media usage but also enables the identification of specific subgroups within the class for targeted research or interventions based on their social media activity patterns.
+
+```{r}
+```
+```{r}
+```
+```{r}
+```
+```{r}
+```
+
