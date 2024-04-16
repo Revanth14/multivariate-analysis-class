@@ -1,0 +1,209 @@
+---
+title: "ec1207_multiple_regression"
+author: "Revanth"
+date: "2024-04-14"
+output: html_document
+---
+
+### Data Loading
+
+```{r}
+# Load the iris dataset
+data(iris)
+
+str(iris)
+```
+
+## 1. Model Development
+
+```{r}
+# Performing multiple regression on the dataset
+model <- lm(Sepal.Length ~ Sepal.Width + Petal.Length + Petal.Width + Species, data = iris)
+
+```
+
+### We are using the lm() function to create the multiple regression model. The formula Sepal.Length ~ Sepal.Width + Petal.Length + Petal.Width + Species specifies that we want to predict the Sepal.Length using Sepal.Width, Petal.Length, Petal.Width, and Species as predictors.
+
+## 2. Model Acceptance
+
+```{r}
+# View the model summary
+summary(model)
+```
+
+### Residuals
+
+#### The minimum residual is -0.79424, and the maximum residual is 0.73103.
+#### The median residual is close to zero (0.00899), which is a good sign, indicating that the model's predictions are centered around the actual values.
+#### The first quartile (1Q) and third quartile (3Q) of the residuals are -0.21874 and 0.20255, respectively, suggesting a relatively symmetric distribution of residuals.
+
+### Fit
+#### The adjusted R-squared value is 0.8627, which adjusts the R-squared for the number of predictors in the model. It provides a more conservative estimate of the model's explanatory power.
+
+#### The F-statistic is 188.3 with 5 and 144 degrees of freedom, and the associated p-value is < 2.2e-16. This suggests that the overall model is statistically significant and fits the data well
+
+#### The p-values indicate the statistical significance of each coefficient. In this case, all coefficients are statistically significant at the 0.05 level, so the model is performing good.
+#### The overall model is statistically significant (p-value < 2.2e-16), indicating a good fit to the data.
+
+```{r}
+coefficients(model)
+```
+
+
+```{r}
+confint(model,level=0.95)
+
+```
+
+
+```{r}
+fitted(model)
+```
+## 3.Residual Analysis
+
+```{r}
+library(GGally)
+```
+
+### To analyze the residuals, we'll create diagnostic plots to check for linearity, homoscedasticity, and normality assumptions.
+
+
+```{r}
+# Create diagnostic plots
+par(mfrow = c(2, 2))
+plot(model)
+```
+
+### The plot() function creates four diagnostic plots for the regression model.
+
+#### The first plot (Residuals vs. Fitted) checks for linearity and homoscedasticity. The residuals should be randomly scattered around the horizontal line at 0, without any clear patterns.
+#### The second plot (Normal Q-Q) checks for normality of residuals. 
+#### The third plot (Scale-Location) checks for homoscedasticity. 
+#### The fourth plot (Residuals vs. Leverage) identifies influential observations that have a large impact on the model.
+
+
+```{r}
+# Cooks D 
+cooks_d <- cooks.distance(model)
+# Create a plot of Cook's D
+plot(cooks_d, main = "Cook's D Plot", ylab = "Cook's Distance", xlab = "Observation Number", type = "h")
+abline(h = 4/nrow(iris), lty = 2, col = "red")  # Add a horizontal line at 4/n
+text(x = 1:length(cooks_d), y = cooks_d, labels = ifelse(cooks_d > 4/nrow(iris), names(cooks_d),""), pos = 4, col = "red")
+
+
+```
+### Interpreting the Cook's D Plot:
+
+#### The Cook's D plot helps identify observations that have a large influence on the regression model.
+
+```{r}
+# Influence plot
+
+# Calculate the leverage values
+leverage <- hatvalues(model)
+
+# Calculate the standardized residuals
+std_residuals <- rstandard(model)
+
+# Create the influence plot
+plot(leverage, std_residuals, main = "Influence Plot", xlab = "Leverage", ylab = "Standardized Residuals", cex = 2, pch = 16, col = "steelblue")
+abline(h = 0, lty = 2, col = "red")
+abline(v = 2 * (length(model$coefficients) + 1) / nrow(iris), lty = 2, col = "red")
+text(leverage, std_residuals, labels = ifelse(leverage > 2 * (length(model$coefficients) + 1) / nrow(iris) | abs(std_residuals) > 2, row.names(iris), ""), pos = 4, cex = 0.8)
+
+```
+
+### Interpreting the Influence Plot:
+#### Observations in the top-right quadrant (high leverage and large positive standardized residuals) and bottom-right quadrant (high leverage and large negative standardized residuals) are considered influential.
+#### Observations in the top-left and bottom-left quadrants (low leverage and large standardized residuals) are not influential but may be outliers.
+
+
+```{r}
+residuals <- residuals(model)
+
+```
+
+## 4. Model Prediction
+
+```{r}
+# Create a new data frame with predictor values
+new_data <- data.frame(Sepal.Width = 3.5, Petal.Length = 4.0, Petal.Width = 1.2, Species = "versicolor")
+
+# Make predictions using the model
+predicted_sepal_length <- predict(model, newdata = new_data)
+print(predicted_sepal_length)
+```
+
+#### Here when random values are given to the independent variables sepal width, petal width, species, the model predicted the dependent variable sepal length would be 6.122
+
+## 5.Model Accuracy
+
+```{r}
+# Calculate the residuals
+residuals <- resid(model)
+
+# Calculate the mean squared error (MSE)
+mse <- mean(residuals^2)
+print(paste("Mean Squared Error (MSE):", mse))
+
+# Calculate the root mean squared error (RMSE)
+rmse <- sqrt(mse)
+print(paste("Root Mean Squared Error (RMSE):", rmse))
+
+```
+
+### MSE
+#### The MSE value of 0.0903765672131653 represents the average squared difference between the predicted values and the actual values.
+#### It measures the average squared deviation of the predictions from the true values.
+#### A lower MSE indicates better model performance, as it suggests that the predictions are closer to the actual values on average.
+
+### RMSE
+#### The RMSE value of 0.300626956897024 is the square root of the MSE.
+#### It provides a measure of the average magnitude of the errors in the same units as the target variable.
+#### The RMSE is more interpretable than the MSE because it is on the same scale as the target variable.
+#### In this case, an RMSE of 0.300626956897024 means that, on average, the model's predictions deviate from the actual values by approximately 0.3 units (assuming the target variable is on the same scale).
+
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
