@@ -1,0 +1,150 @@
+---
+title: "logistic_regression_iris"
+author: "Revanth"
+date: "2024-04-18"
+output: html_document
+---
+
+```{r}
+library(dplyr)
+library(tidyr)
+library(MASS)
+library(ggplot2)
+library(cowplot)
+library(caret)
+library(e1071)
+library(pROC)
+```
+
+```{r}
+# Load the iris dataset
+data(iris)
+
+str(iris)
+```
+
+```{r}
+# Split the data into training and testing sets
+set.seed(42)
+train_index <- createDataPartition(iris$Species, p = 0.7, list = FALSE)
+train_data <- iris[train_index, ]
+test_data <- iris[-train_index, ]
+```
+
+# 1. Model Deployment 
+
+## Logistic Regression Analysis
+### using the glm() function to create a logistic regression model. The formula Species ~ . specifies that we want to predict the Species variable using all other variables in the dataset. The family = "binomial" argument indicates that we are performing binary logistic regression.
+
+```{r}
+# 1) Model Development
+model <- glm(Species ~ ., data = train_data, family = "binomial")
+```
+
+# 2. Model Acceptance
+
+### The summary(model) command provides a summary of the model, including the coefficients, their standard errors, z-values, and p-values. It helps assess the significance of each predictor variable.
+
+```{r}
+# 2) Model Acceptance
+summary(model)
+```
+
+## Insights:
+
+### The extremely small residual deviance (1.3283e-09) compared to the null deviance (1.3367e+02) suggests that the model fits the data exceptionally well. It indicates that the predictor variables (Sepal.Length, Sepal.Width, Petal.Length, Petal.Width) collectively explain a significant amount of the variation in the response variable (Species).
+
+### The coefficients for Sepal.Length, Sepal.Width, Petal.Length, and Petal.Width are not statistically significant, as indicated by the high p-values (all equal to 1). This suggests that these variables do not have a significant individual effect on the log-odds of the response variable.
+
+
+# 3. Residual Analysis
+
+
+```{r}
+# 3) Residual Analysis
+residuals <- residuals(model, type = "deviance")
+plot(fitted(model), residuals, xlab = "Fitted Values", ylab = "Residuals")
+abline(h = 0, lty = 2)
+```
+
+### There is a fixed pattern in the residuals vs fitted plot which means that the selected independent variables will not explain the dependent variable well.
+
+# 4. Prediction
+
+```{r}
+# 4) Prediction
+predicted_prob <- predict(model, newdata = test_data, type = "response")
+predicted_class <- ifelse(predicted_prob > 0.5, "versicolor", "setosa")
+
+predicted_prob
+
+```
+
+### The predicted class labels allow us to assess how well the model generalizes to unseen data.
+### As per the above data, model is predicting well for the given data.
+
+# 5. Model Accuracy
+
+```{r}
+# 5) Model Accuracy
+accuracy <- sum(predicted_class == test_data$Species) / nrow(test_data)
+print(paste("Accuracy:", accuracy))
+```
+
+### The accuracy provides an overall measure of how well the model performs in classifying the iris species.
+
+### An accuracy of 0.666 indicates that the logistic regression model correctly predicted the outcome (the value of label) approximately 67% correctly.
+
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
