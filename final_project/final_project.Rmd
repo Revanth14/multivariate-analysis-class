@@ -1,0 +1,474 @@
+---
+title: "final_project"
+author: "Revanth"
+date: "2024-04-29"
+output: html_document
+---
+
+```{r}
+# Load the required libraries
+library(ggplot2)
+library(dplyr)
+library(factoextra)
+library(psych)
+```
+
+## Data Collection
+### Titanic dataset is a universally available dataset, that is used of many DS and ML use cases. It contains passengers information on the ship Titanic
+
+
+```{r}
+# Load the Titanic dataset
+titanic <- read.csv('C:/Users/Admin/Desktop/MVA/titanic.csv.csv')
+
+str(titanic)
+summary(titanic)
+```
+### We do the summary analysis to understand the variables and distributions
+
+## Question
+### How does the survival rate differ between males and females across different age groups?
+
+## Hypothesis
+### Understanding how survival rates vary between males and females across different age groups is important because it provides insights into the factors that influenced survival outcomes on the titanic
+### By Analyzing the interplay between gender and age, we can identify potential patterns or disparities in survival chances. This info can help us understand the social and cultural context of the time and shed light on the evacuation procedures and priorities during disaster
+
+
+```{r}
+# Checking for missing values
+sapply(titanic, function(x) sum(is.na(x)))
+```
+
+### We can also check for missing values to ensure data quality
+### Once we found that there are no null values, we can proceed further with the data preprocessing.
+### Here, I converted Survived, Pclass, Sex, Embarked into the factors.
+### For age and fare, if there is null values, added mean of the column.
+
+```{r}
+# Data preprocessing
+titanic$Survived <- as.factor(titanic$Survived)
+titanic$Pclass <- as.factor(titanic$Pclass)
+titanic$Sex <- as.factor(titanic$Sex)
+titanic$Embarked <- as.factor(titanic$Embarked)
+titanic$Age <- ifelse(is.na(titanic$Age), mean(titanic$Age, na.rm = TRUE), titanic$Age)
+titanic$Fare <- ifelse(is.na(titanic$Fare), mean(titanic$Fare, na.rm = TRUE), titanic$Fare)
+```
+
+
+```{r}
+# Descriptive summary statistics
+summary(titanic)
+```
+
+## EDA
+### Now once the data is ready, we can perform EDA to get the idea(visual) about the data, distribution of data, and also relation between variables.
+
+
+```{r}
+## EDA
+# converting the numeric survive indicator to factor/categorical
+titanic$Survived=ifelse(titanic$Survived==1,'Yes','No')
+titanic$Survived=as.factor(titanic$Survived)
+
+head(titanic)
+```
+
+
+
+```{r}
+# Converting categorical columns from int to factors
+titanic$Pclass=as.factor(titanic$Pclass)
+titanic$SibSp=as.factor(titanic$SibSp)
+titanic$Parch=as.factor(titanic$Parch)
+
+head(titanic)
+
+sum(is.na(titanic$Age))
+
+titanic$Age[is.na(titanic$Age)] <- round(median(titanic$Age, 
+                                                na.rm = TRUE))
+
+sum(is.na(titanic$Age))
+```
+
+
+```{r}
+#Univariate Analysis
+
+#Question
+#How any passengers are travelling in each class?
+
+ggplot(data=titanic, aes(x=Pclass, fill = Pclass)) + 
+  geom_bar(position = "dodge") + 
+  geom_text(stat='count', aes(label=..count..), position = position_dodge(0.9),vjust=-0.2) +
+  ylab("Number of Passengers")
+
+
+```
+
+### First, used bar plot to see the number of passengers in each class
+### We can see most of the passengers are from class 3 (cheapest of all)
+### Suprisingly there are more passengers in Class-1, than compared to Class-2
+
+
+```{r}
+# Question
+# How many were survived?
+
+ggplot(data=titanic, aes(x=Survived, fill = Survived)) + 
+  geom_bar(position = "dodge") + 
+  geom_text(stat='count', aes(label=..count..), position = position_dodge(0.9),vjust=-0.2) +
+  ylab("Number of Passengers")
+
+
+```
+
+### Next, we can plot a chart based on how many were survived.
+### Here we can see there are 342 that are survived, and 549 passengers who lost their lives
+
+
+
+```{r}
+# How is the price ranged?
+ggplot(data=titanic, aes(x=Fare,)) + 
+  geom_histogram(binwidth = 15) +
+  xlab("Fare")
+```
+
+### Next, price distribution using histogram.
+### The tickets fare are consistent with the ticket class for sure, as the highest number of ticket purchased is the cheapest one offered to board the Titanic.
+
+
+```{r}
+
+# Which class passengers has high survival chance
+ggplot(titanic, aes(x=Pclass,fill=Survived))+ geom_bar(position = "dodge") + geom_text(stat='count',aes(label=..count..),position = position_dodge(0.9),vjust=-0.2) +
+  ylab("Number of Passengers") + xlab("Passenger Class")
+
+
+```
+
+### Next, important thing which class passengers has high survival chances?
+### From the chart we can conclude that people who paid more ie, Class-1 had much better chance of survival as compared to others.
+
+
+```{r}
+# what ticket was selected by what age of passengers?
+ggplot(titanic) + geom_freqpoly(mapping = aes(x = Age, color = Pclass), binwidth = 2.5) +
+  ylab("Frequency")
+
+```
+
+### HEre, we can see that most of the passengers irrespective of ticket class are almost of similar age (approx 30)
+
+
+```{r}
+# Age Distribution by passenger class and sex
+ggplot(titanic, aes(x=factor(Pclass), y=Age, fill=Sex)) +
+  geom_boxplot() +
+  facet_grid(Sex ~ .) +
+  scale_fill_manual(values=c("lightblue", "pink"), name="Sex") +
+  labs(title="Age Distribution by Passenger Class and Sex",
+       x="Passenger Class",
+       y="Age") +
+  theme_minimal()
+
+```
+
+## This faceted boxplot also shows almost similar that most of the passengers
+## were from age 20-40 including all the ticket classes.
+
+
+```{r}
+
+# Scatterplot matrix for the numerical columns in the data
+numeric_vars <- titanic[, c("Survived", "Pclass", "Age", "SibSp", "Parch", "Fare")]
+pairs(numeric_vars)
+
+```
+
+## General Descriptive Data analysis and visualization
+
+```{r}
+# Select relevant variables for analysis
+titanic <- read.csv('C:/Users/Admin/Desktop/MVA/titanic.csv.csv')
+selected_vars <- c("Survived", "Pclass", "Sex", "Age", "SibSp", "Parch", "Fare")
+titanic_subset <- titanic[, selected_vars]
+```
+
+
+```{r}
+# Handle missing values
+titanic_subset$Age <- ifelse(is.na(titanic_subset$Age), mean(titanic_subset$Age, na.rm = TRUE), titanic_subset$Age)
+titanic_subset$Fare <- ifelse(is.na(titanic_subset$Fare), mean(titanic_subset$Fare, na.rm = TRUE), titanic_subset$Fare)
+
+```
+
+
+# Models
+
+## PCA
+### PCA helps us identify the pricipal components that explain the most variance in the data. The scree plot shows the eigen values associated with each principal components helping us determine the optimal number of components to retain.
+### The biplot visualizes the relationships between variables and observations
+
+```{r}
+# Convert categorical variables to numeric
+titanic_subset$Sex <- as.numeric(factor(titanic_subset$Sex))
+titanic_subset$Survived <- as.numeric(titanic_subset$Survived)
+
+```
+
+
+```{r}
+# Normalize the data
+titanic_scaled <- scale(titanic_subset)
+```
+
+
+## PCA can help us identify key variables that contribute to the variation in survival rates between males and females across age groups
+
+```{r}
+# Perform PCA
+pca_result <- prcomp(titanic_scaled)
+
+# Print the summary of PCA
+summary(pca_result)
+```
+
+
+```{r}
+# Scree plot to determine the number of principal components
+screeplot(pca_result, type = "lines", main = "Scree Plot")
+```
+
+## from the above, we can see that PCA can confirm the importance of sex and Age variables in survival rates and provides insights into relationships between variables.
+
+```{r}
+# Biplot to visualize the relationships between variables and observations
+biplot(pca_result, scale = 0, cex = 0.6)
+
+```
+
+## Factor Analysis
+### This helps in indetifying latent factors that explain the correlarions among variables
+### The summary of factor analysis provides information about the factor loadings which indicate the strengths and directions of the relationship between the variables and extracted factors.
+
+```{r}
+# Perform Factor Analysis
+factor_result <- factanal(titanic_scaled, factors = 3, rotation = "varimax")
+
+# Print the summary of Factor Analysis
+print(factor_result)
+```
+
+
+## For our question, this alone in not the appropriate method, but this analysis can further complement the previous analysis to better understand the relationship betwwen variables.
+## Why not this method? 
+## It would typically be used if we wanted to reduce a larger set of variables into fewer dimensions(factors)
+## It wouldn't typically be applied to analyze direct differences in survival rates.
+
+```{r}
+# Plot the factor loadings
+load <- factor_result$loadings[, 1:3]
+plot(load, type = "n", main = "Factor Loadings", xlab = "Factor 1", ylab = "Factor 2")
+text(load, labels = rownames(load), cex = 0.8)
+
+```
+
+## Clustering
+
+### Clustering is an interesting approach to explore patterns of survival among passengers on titanic, grouping individuals based on similarities across multiple variables inclusing Age and Sex to see how these clusters relate to survival rates,
+
+
+```{r}
+library(tidyverse)
+library(cluster) 
+# Load data
+titanic_data <- titanic::titanic_train
+```
+
+```{r}
+# Preprocess the data
+titanic_data <- titanic_data %>%
+  filter(!is.na(Age), !is.na(Fare)) %>%
+  mutate(Sex = as.numeric(factor(Sex, levels = c("male", "female"))))
+
+```
+
+```{r}
+# Scale the data
+titanic_scaled <- scale(titanic_data[, c("Age", "Sex", "Fare")])
+
+```
+
+```{r}
+set.seed(123)  # For reproducibility
+kmeans_result <- kmeans(titanic_scaled, centers = 4, nstart = 25)
+```
+
+```{r}
+# Add cluster assignments back to the data
+titanic_data$Cluster <- kmeans_result$cluster
+```
+
+### The clustering analysis can reveal the pattern, such as whether younger, wealthiness or female passengers as clusters and had higher survival rate.
+```{r}
+# Calculate survival rates by cluster
+survival_by_cluster <- titanic_data %>%
+  group_by(Cluster) %>%
+  summarise(Count = n(),
+            Survivors = sum(Survived, na.rm = TRUE),
+            SurvivalRate = mean(Survived, na.rm = TRUE))
+# Print the survival rates by cluster
+print(survival_by_cluster)
+
+```
+
+```{r}
+ggplot(titanic_data, aes(x = Age, y = Fare, color = factor(Survived))) +
+  geom_point(alpha = 0.5) +
+  facet_wrap(~Cluster) +
+  scale_color_manual(values = c("red", "green")) +
+  labs(title = "Cluster Analysis of Titanic Passengers",
+       x = "Age",
+       y = "Fare",
+       color = "Survived")
+```
+### This can further enhance the analysis, It provides a comprehensive view by grouping similar passengers together and examining their outcomes as collectives.
+
+## Logistic Regression
+### It is a type of regression analysis used for predicting the outcome of categorical dependent variable based on one or more predictor variables.
+```{r}
+library(titanic)
+library(dplyr)
+library(ggplot2)
+library(caret)
+
+# Load the data
+data(titanic_train)
+titanic_data <- titanic_train
+```
+
+```{r}
+
+# Convert 'Sex' to a factor as it is a categorical variable
+titanic_data$Sex <- factor(titanic_data$Sex, levels = c("male", "female"))
+
+```
+
+## Here, we are using glm() function in R to perform logistic regression, specifying 'binomial' for binomial logistic regression.
+## We are performing below analysis using single predictor
+
+```{r}
+# Simple logistic regression with Sex as a predictor
+model_sex <- glm(Survived ~ Sex, family = binomial(), data = titanic_data)
+summary(model_sex)
+```
+
+```{r}
+# Add predicted probabilities to the data frame
+titanic_data$predicted <- predict(model_sex, type = "response")
+```
+
+```{r}
+# Plotting
+ggplot(titanic_data, aes(x = Age, y = predicted, color = Sex)) +
+  geom_point(alpha = 0.2) +
+  labs(title = "Predicted Survival Probability by Age and Sex",
+       x = "Age",
+       y = "Predicted Probability of Survival")
+
+```
+
+## Finding Accuracy
+
+```{r}
+# Predict probabilities
+probabilities <- predict(model_sex, type = "response")
+
+# Convert probabilities to binary predictions
+predictions <- ifelse(probabilities > 0.5, 1, 0)
+
+# Actual survival data
+actual <- titanic_data$Survived
+
+# Calculate accuracy
+accuracy <- mean(predictions == actual)
+print(paste("Accuracy:", accuracy))
+```
+
+### we can see that the model has accuracy of around 79%, which is still not the best but compared to others it is performing well.
+
+```{r}
+
+# Create a confusion matrix
+conf_matrix <- confusionMatrix(as.factor(predictions), as.factor(actual))
+
+# Print the confusion matrix along with other stats
+print(conf_matrix)
+```
+
+## Multiple Regression
+
+```{r}
+# Handling missing values in 'Age'
+titanic_data$Age <- ifelse(is.na(titanic_data$Age), median(titanic_data$Age, na.rm = TRUE), titanic_data$Age)
+titanic_data$Sex <- factor(titanic_data$Sex)
+titanic_data$Pclass <- as.factor(titanic_data$Pclass)
+```
+
+```{r}
+# Multiple logistic regression with Sex and Age as predictors
+model<- glm(Survived ~ Sex + Age + Pclass, family = binomial(), data = titanic_data)
+summary(model)
+```
+
+```{r}
+# Predict probabilities
+probabilities <- predict(model, type = "response")
+
+# Convert probabilities to binary predictions
+predictions <- ifelse(probabilities > 0.5, 1, 0)
+
+# Actual survival data
+actual <- titanic_data$Survived
+
+# Calculate accuracy
+accuracy <- mean(predictions == actual)
+print(paste("Accuracy:", accuracy))
+```
+### This has the accuracy of aroung 80%
+
+### Building Confusion Matrix
+
+```{r}
+
+# Create a confusion matrix
+conf_matrix <- confusionMatrix(as.factor(predictions), as.factor(actual))
+
+# Display the confusion matrix and other statistics
+print(conf_matrix)
+
+
+```
+
+## Key Knowledge
+### 1. Survival rates varied significantly based on gender and age group.
+#### Females had higher survial rates compared to males across all age groups.
+#### Highest female survival rate(0-18) age
+#### Lowest survival rate male (19-40) age group.
+
+### 2. PassengerClass and Fare
+#### Passengers in higher Pclass(1 and 2) had better chances of survival chances compared to lower classes.
+#### Higher fare associated with increased likelihood.
+### This suggests that socio-economic status and ticket fare influenced survival rates.
+
+### Logistic regression model revealed that being female increaed the odds of survical while other age decreased the odds.
+
+## Final conclusion
+# The major factors that played key roles in answering the above question are
+## 1. Gender Impact
+## 2. Socio Economic factor
+## 3. Age Influence
+```{r}
+```
