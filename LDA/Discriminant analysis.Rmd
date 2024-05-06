@@ -1,0 +1,263 @@
+---
+title: "Discriminant analysis"
+author: "Revanth"
+date: "2024-04-25"
+output: html_document
+---
+
+```{r}
+library(MASS)
+library(ggplot2)
+library(memisc)
+library(ROCR)
+library(dplyr)
+library(car)
+library(klaR)  
+library(ROCR)    
+library(caret)
+```
+
+```{r}
+library(titanic)
+
+# Load the dataset and inspect the structure
+data("titanic_train")
+titanic_data <- titanic_train
+str(titanic_data)
+
+```
+
+
+```{r}
+# Keep relevant columns and remove missing values
+titanic_data <- titanic_data[, c("Survived", "Pclass", "Sex", "Age", "Fare")]
+titanic_data <- na.omit(titanic_data)
+
+# Convert categorical variables to numeric
+titanic_data$Sex <- as.numeric(factor(titanic_data$Sex))
+
+```
+
+# Model Development
+
+```{r}
+library(MASS)
+
+# Fit an LDA model
+lda_model <- lda(Survived ~ ., data = titanic_data)
+print(lda_model)
+
+```
+
+## Insights
+### Prior Probabilities of groups:
+#### These probabilities represent the overall likelihood of each class (Survived vs. Not Survived) in the dataset
+#### 1. Not Survived (0): Approximately 59.38%
+#### 2. Survived (1): Approximately 40.62%
+
+### Group Means
+#### The group means show the average values of each predictor variable for each class
+#### 1. Pclass (Passenger class): The average passenger class is higher (closer to 3, which indicates lower socio-economic status) for those who did not survive (2.49) compared to those who survived (1.87). This suggests that lower-class passengers had a lower survival rate, which is historically accurate.
+
+### Coefficients of Linear Discriminants
+#### 1. Pclass: The negative coefficient (-0.835) suggests that higher passenger class numbers (lower socio-economic status) are associated with a higher likelihood of not surviving.
+#### 2.Sex: The strong negative coefficient (-1.995) indicates a significant effect of sex on survival, with males (lower numeric coding) more likely to not survive.
+#### 3. Age: The small negative coefficient (-0.023) suggests a slight trend where older individuals are more likely to not survive, although this effect is minimal.
+#### 4. Fare: The very small positive coefficient (0.000283) indicates that higher fares slightly increase the likelihood of survival, aligning with the group means.
+
+## key findings
+### 1. Social Class and Fare: There's a strong socio-economic factor in survival, with higher-class passengers who paid higher fares having better survival chances.
+### 2. Gender Bias in Survival: Gender plays a significant role, with females having a higher likelihood of survival.
+### 3. Age: Age has a minimal effect, but younger passengers had a slightly better chance of survival.
+
+
+# Model Acceptance
+
+```{r}
+summary(lda_model)
+```
+
+```{r}
+print(lda_model)
+```
+
+```{r}
+plot(lda_model)
+```
+### The plot of the Linear Discriminant Analysis (LDA) model indicates distinct groupings for class 0 and class 1 along the LD1 axis.
+
+### This separation along the LD1 axis suggests clear discrimination between the two classes based on the linear combination of predictor variables. The transition from negative to positive LD1 values signifies the shift from one class to another, highlighting the effectiveness of the LDA model in distinguishing between the groups based on their characteristics.
+
+# Residual Analysis
+
+```{r}
+lda_pred <- predict(lda_model, titanic_data)
+
+# Create a confusion matrix to see the correct and incorrect predictions
+conf_matrix <- table(Predicted = lda_pred$class, Actual = titanic_data$Survived)
+print(conf_matrix)
+
+```
+
+```{r}
+# Examining the posterior probabilities
+head(lda_pred$posterior)
+```
+
+### The posterior probabilities from LDA give the probability that a given observation belongs to each possible class,
+
+### Each row in lda_pred$posterior represents an observation, and each column represents a class. 
+
+```{r}
+# Identify observations with high uncertainty
+uncertain_predictions <- which(abs(lda_pred$posterior[,1] - 0.5) < 0.1)
+titanic_data[uncertain_predictions, ]
+
+```
+
+## Insights
+
+### The residual analysis aims to assess the accuracy of the Linear Discriminant Analysis (LDA) model by examining the discrepancies between the predicted class probabilities and the actual class labels.
+
+# Model Prediction
+
+```{r}
+titanic.lda <- lda(Survived ~ Pclass + Sex + Age + Fare, data = titanic_data, na.action = na.omit)
+
+titanic_pred <- predict(titanic.lda, titanic_data)
+titanic_pred_posterior <- titanic_pred$posterior[,2]  # Assuming 'Survived' is coded as 1
+
+titanic_data$Survived <- as.numeric(as.factor(titanic_data$Survived)) - 1
+
+pred <- prediction(titanic_pred_posterior, titanic_data$Survived)
+
+roc.perf <- performance(pred, measure = "tpr", x.measure = "fpr")
+auc.train <- performance(pred, measure = "auc")
+auc.train <- auc.train@y.values[[1]]  # Extract AUC value
+
+# Plot ROC curve
+plot(roc.perf)
+abline(a=0, b=1)
+text(x = .25, y = .65 ,paste("AUC = ", round(auc.train, 3), sep = ""))
+
+
+```
+
+```{r}
+# Fit LDA model
+titanic_lda <- lda(Survived ~ Pclass + Sex + Age + Fare, data = titanic_data)
+
+# Plot the LDA
+plot(titanic_lda, col = as.integer(titanic_data$Survived))
+
+```
+
+
+```{r}
+# Fit LDA model
+titanic_lda <- lda(Survived ~ Pclass + Sex + Age + Fare, data = titanic_data)
+
+# Plot the first discriminant
+plot(titanic_lda, dimen = 1, type = "b", col = as.integer(titanic_data$Survived + 1))  # Adding 1 for color differentiation
+
+```
+
+### Good Separation: Indicates that the features used are effective predictors of survival.
+### Poor Separation: Suggests that the model may struggle to predict survival based solely on these features, or that the relationships between features and survival are not linear.
+
+```{r}
+titanic_data$Pclass <- as.factor(titanic_data$Pclass)  # Make sure Pclass is a factor
+titanic_data$Age <- ifelse(is.na(titanic_data$Age), median(titanic_data$Age, na.rm = TRUE), titanic_data$Age)
+titanic_data$Fare <- ifelse(is.na(titanic_data$Fare), median(titanic_data$Fare, na.rm = TRUE), titanic_data$Fare)
+
+# MANOVA
+m_titanic <- manova(cbind(Age, Fare) ~ Pclass, data = titanic_data)
+summary(m_titanic, test = "Wilks")
+summary(m_titanic, test = "Pillai") 
+# ANOVA for each dependent variable
+summary.aov(m_titanic)
+
+```
+
+## Insights
+### Wilks' Test:
+#### The Wilks' Lambda test assesses the significance of the relationship between the predictors and the response variable.
+#### The results indicate a statistically significant relationship between the predictor variables and the response variable, as evidenced by the small p-value (2.2e-16), suggesting rejection of the null hypothesis.
+### Pillai's Test:
+#### Pillai's trace is another measure of the relationship between the predictors and the response variable.
+#### Similar to Wilks' test, Pillai's trace yields a small p-value (2.2e-16), indicating a significant relationship between the predictor variables and the response variable.
+
+
+# Model Accuracy
+
+```{r}
+
+titanic_data$Survived <- factor(titanic_data$Survived)
+titanic_data$Pclass <- factor(titanic_data$Pclass)
+titanic_data$Sex <- as.numeric(factor(titanic_data$Sex))  # Converting 'Sex' to numeric
+titanic_data$Age <- ifelse(is.na(titanic_data$Age), median(titanic_data$Age, na.rm = TRUE), titanic_data$Age)
+titanic_data$Fare <- ifelse(is.na(titanic_data$Fare), median(titanic_data$Fare, na.rm = TRUE), titanic_data$Fare)
+```
+
+```{r}
+# Splitting data into training and test sets
+set.seed(123)
+training_indices <- createDataPartition(titanic_data$Survived, p = 0.8, list = FALSE)
+train_titanic <- titanic_data[training_indices, ]
+test_titanic <- titanic_data[-training_indices, ]
+
+```
+
+```{r}
+# Fitting LDA model on the training set
+titanic_lda <- lda(Survived ~ Pclass + Sex + Age + Fare, data = train_titanic)
+
+```
+
+```{r}
+# Prediction on the training set
+titanic_lda_predict_train <- predict(titanic_lda, newdata = train_titanic)
+train_class <- titanic_lda_predict_train$class
+train_table <- table(Predicted = train_class, Actual = train_titanic$Survived)
+print(train_table)
+
+```
+
+### Confusion Matrix
+#### TN: 279 passengers were correctly predicted as not survived (0)
+#### FP: 69 passengers were incorrectly predicted as survived (1), but they did not survive.
+#### FN: 61 passengers were incorrectly predicted as not survived, but they actually survived.
+#### TP: 163 passengers were correctly predicted as survived.
+
+```{r}
+# Running accuracy on the training set
+train_accuracy <- sum(diag(train_table)) / sum(train_table)
+print(paste("Training Set Accuracy:", train_accuracy))
+```
+
+### Accuracy: The accuracy on the training set is approximately 77.27%. This indicates that the LDA model correctly predicts the survival status of about 77.27% of the passengers in the training set
+
+```{r}
+# Prediction on the test set
+titanic_lda_predict_test <- predict(titanic_lda, newdata = test_titanic)
+test_class <- titanic_lda_predict_test$class
+test_table <- table(Predicted = test_class, Actual = test_titanic$Survived)
+print(test_table)
+
+# Running accuracy on the test set
+test_accuracy <- sum(diag(test_table)) / sum(test_table)
+print(paste("Test Set Accuracy:", test_accuracy))
+
+```
+
+### Confusion Matrix
+#### TN: 74 passengers were correctly predicted as not survived (0)
+#### FP: 19 passengers were incorrectly predicted as survived (1), but they did not survive.
+#### FN: 10 passengers were incorrectly predicted as not survived, but they actually survived.
+#### TP: 39 passengers were correctly predicted as survived.
+
+### Accuracy: The accuracy on the test set is approximately 79.58%. This suggests that the model is slightly more effective when predicting new, unseen data compared to the training data.
+
+## Final Conclusions:
+### The model shows a decent performance with accuracies of 77.27% for the training set and 79.58% for the test set. The higher accuracy in the test set suggests that the model generalizes well, though it's also possible that the test set may have been slightly easier for the model due to its composition.
+### There is a bias towards predicting non-survivors more accurately than survivors, as evidenced by the higher number of true negatives (TN) compared to true positives (TP) in both sets.
